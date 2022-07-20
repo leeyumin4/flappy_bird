@@ -1,6 +1,14 @@
 import pygame
 import random
 
+# Made mirroring obstacles
+# The background scrolling has some weird behavior after about 5 second into the game.
+# I will work on collsion next time
+
+
+
+
+
 pygame.init()
 
 # Game window
