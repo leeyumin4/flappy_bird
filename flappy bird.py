@@ -23,9 +23,6 @@ FPS = 60
 
 # VARIABLES
 YELLOW = (255,255,0)
-SCROLL_THRESHOLD = SCREEN_WIDTH - 200
-scroll = 0
-bg_scroll = 0 # background scroll variable
 ob_gap = 150 # gap between two obstacles
 ob_frequency = 1500 # ms
 last_ob = pygame.time.get_ticks() - ob_frequency
@@ -38,11 +35,16 @@ mountain_image = pygame.transform.scale(mountain_image, (SCREEN_WIDTH, SCREEN_HE
 bird_image = pygame.image.load('flappy bird/Assets/Bird/icon-32.png').convert_alpha()
 obstacle_image = pygame.image.load('flappy bird/Assets/Background/obstacle.png').convert_alpha()
 obstacle_image = pygame.transform.scale(obstacle_image, (50, 300))
-def draw_bg(bg_scroll):
-    screen.blit(bg_image, (0 + bg_scroll, 0))
-    screen.blit(bg_image, (SCREEN_WIDTH + bg_scroll, 0))
-    screen.blit(mountain_image, (0 + bg_scroll, 350))
-    screen.blit(mountain_image, (SCREEN_WIDTH + bg_scroll, 350))
+
+bg1 = 0
+bg2 = SCREEN_WIDTH
+
+def draw():
+    screen.blit(bg_image, (bg1, 0))
+    screen.blit(bg_image, (bg2, 0))
+    screen.blit(mountain_image, (bg1, 350))
+    screen.blit(mountain_image, (bg2, 350))
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -52,37 +54,31 @@ class Player(pygame.sprite.Sprite):
         self.gravity = 0
 
     def move(self):
-        # movement variables
-        scroll = 0
-        dx = 3 # change of movement on x axis
-        dy = 0 # change of movement on y axis
 
         key = pygame.key.get_pressed()
         if key[pygame.K_w]:
-            self.gravity -= 2
+            self.gravity -= 1
         # if key[pygame.K_s]:
         #     dy = 5
 
-        if self.rect.right <= SCROLL_THRESHOLD:
-            scroll = -dx
-
-        self.rect.x += dx + scroll
-        self.rect.y += dy
-        
-        return scroll
-
-    def draw(self):
-        screen.blit(self.image, self.rect)
-
     def player_gravity(self):
-        self.gravity += 1
+        self.gravity += 0.1
         self.rect.y += self.gravity
         # if self.rect.y  SCREEN_HEIGHT:
         #     self.rect.y = SCREEN_HEIGHT
+        print(self.gravity)
+
+
+    def draw(self):
+        screen.blit(self.image, self.rect)
+        self.rect.x += 0.9
+
+
+
 
     def update(self):
         self.move()
-        # self.player_gravity()
+        self.player_gravity()
 
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self, x, y,position):
@@ -112,15 +108,16 @@ run = True
 while run:
     
     clock.tick(FPS)
-    screen.blit(mountain_image,(0,0))
 
-    scroll = bird.move()
+    bg1 -= 2
+    bg2 -= 2
+    if bg1 < bg_image.get_width() * -1:
+        bg1 = bg_image.get_width()
+    if bg2 < bg_image.get_width() * -1:
+        bg2 = bg_image.get_width()
 
-    # blit and scroll background
-    bg_scroll += scroll
-    if bg_scroll >= SCREEN_WIDTH:
-        bg_scroll = 0
-    draw_bg(bg_scroll)
+    draw()
+
 
     # sprites
     bird.draw()
