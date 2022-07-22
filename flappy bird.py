@@ -1,13 +1,6 @@
 import pygame
 import random
 
-# Made mirroring obstacles
-# The background scrolling has some weird behavior after about 5 second into the game.
-# I will work on collsion next time
-
-
-
-
 
 pygame.init()
 
@@ -26,6 +19,8 @@ YELLOW = (255,255,0)
 ob_gap = 150 # gap between two obstacles
 ob_frequency = 1500 # ms
 last_ob = pygame.time.get_ticks() - ob_frequency
+flying = False
+game_over = False
 
 # Images
 bg_image = pygame.image.load('flappy bird/Assets/Background/background.png').convert_alpha()
@@ -52,20 +47,32 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft = (0, SCREEN_HEIGHT // 2))
         self.rect.center = (x, y)
         self.gravity = 0
+        self.pressed = False
+        
 
     def move(self):
 
         key = pygame.key.get_pressed()
-        if key[pygame.K_w]:
-            self.gravity -= 1
-        # if key[pygame.K_s]:
-        #     dy = 5
+        if key[pygame.K_w] == 1 and self.pressed == False:
+            self.pressed = True
+            self.gravity -= 13
+        if key[pygame.K_w] == 0:
+            self.pressed = False
+        
 
     def player_gravity(self):
-        self.gravity += 0.1
-        self.rect.y += self.gravity
-        # if self.rect.y  SCREEN_HEIGHT:
-        #     self.rect.y = SCREEN_HEIGHT
+        self.gravity += 0.4
+        if self.gravity > 8:
+            self.gravity = 8
+        if self.gravity < -15:
+            self.gravity = -8
+        if self.rect.bottom < 500:
+            self.rect.y += self.gravity
+        # if self.rect.top < 0:
+        #     self.rect.y -= self.gravity
+
+        
+
         print(self.gravity)
 
 
@@ -73,12 +80,13 @@ class Player(pygame.sprite.Sprite):
         screen.blit(self.image, self.rect)
         self.rect.x += 0.9
 
-
+    
 
 
     def update(self):
         self.move()
-        self.player_gravity()
+        if flying == True:
+            self.player_gravity()
 
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self, x, y,position):
@@ -100,7 +108,9 @@ class Obstacle(pygame.sprite.Sprite):
 
 
 bird = Player(50,SCREEN_HEIGHT // 2)
-obstacle = pygame.sprite.Group()
+obstacle_group = pygame.sprite.Group()
+bird_group = pygame.sprite.Group()
+
 
 
 
@@ -109,37 +119,47 @@ while run:
     
     clock.tick(FPS)
 
-    bg1 -= 2
-    bg2 -= 2
-    if bg1 < bg_image.get_width() * -1:
-        bg1 = bg_image.get_width()
-    if bg2 < bg_image.get_width() * -1:
-        bg2 = bg_image.get_width()
-
     draw()
-
 
     # sprites
     bird.draw()
     bird.update()
-    obstacle.draw(screen)
-    obstacle.update()
+    if flying == True and game_over == False:
+        obstacle_group.draw(screen)
+        obstacle_group.update()
+        # moved background scrolling, so that when bird dies, the background and obstascle stops running.
+        bg1 -= 2
+        bg2 -= 2
+        if bg1 < bg_image.get_width() * -1:
+            bg1 = bg_image.get_width()
+        if bg2 < bg_image.get_width() * -1:
+            bg2 = bg_image.get_width()
 
-    # make new obstacles
-    time = pygame.time.get_ticks()
-    if time - last_ob > ob_frequency:
-        ob_height = random.randint(-100 , 100)
-        bottom_ob = Obstacle(SCREEN_WIDTH,SCREEN_HEIGHT // 2 + ob_height, -1)
-        top_ob = Obstacle(SCREEN_WIDTH,SCREEN_HEIGHT // 2 + ob_height, 1)
-        obstacle.add(bottom_ob)
-        obstacle.add(top_ob)
-        last_ob = time
+        # make new obstacles
+        
+        time = pygame.time.get_ticks()
+        if time - last_ob > ob_frequency:
+            ob_height = random.randint(-100 , 100)
+            bottom_ob = Obstacle(SCREEN_WIDTH,SCREEN_HEIGHT // 2 + ob_height, -1)
+            top_ob = Obstacle(SCREEN_WIDTH,SCREEN_HEIGHT // 2 + ob_height, 1)
+            obstacle_group.add(bottom_ob)
+            obstacle_group.add(top_ob)
+            last_ob = time
+
+
+    # check if bird hits the ground or ceiling
+    if bird.rect.bottom > 500 or bird.rect.top < 0:
+        game_over = True
+        flying = False
 
     # Need to make collision
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
+        if event.type == pygame.KEYDOWN and flying == False and game_over == False:
+            flying = True
+
 
     pygame.display.update()
 
