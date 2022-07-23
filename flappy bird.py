@@ -27,7 +27,7 @@ bg_image = pygame.image.load('flappy bird/Assets/Background/background.png').con
 bg_image = pygame.transform.scale(bg_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
 mountain_image = pygame.image.load('flappy bird/Assets/Background/mountain.png').convert_alpha()
 mountain_image = pygame.transform.scale(mountain_image, (SCREEN_WIDTH, SCREEN_HEIGHT // 3))
-bird_image = pygame.image.load('flappy bird/Assets/Bird/icon-32.png').convert_alpha()
+# bird_image = pygame.image.load(f'flappy bird/Assets/Bird/bird{num}.png').convert_alpha()
 obstacle_image = pygame.image.load('flappy bird/Assets/Background/obstacle.png').convert_alpha()
 obstacle_image = pygame.transform.scale(obstacle_image, (50, 300))
 
@@ -44,7 +44,13 @@ def draw():
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = bird_image
+        self.images = []
+        self.index = 0
+        self.counter = 0
+        for num in range (1, 5):
+            img = pygame.image.load(f'flappy bird/Assets/Bird/bird{num}.png').convert_alpha()
+            self.images.append(img)
+        self.image = self.images[self.index]
         self.rect = self.image.get_rect(topleft = (0, SCREEN_HEIGHT // 2))
         self.rect.center = (x, y)
         self.width = 32
@@ -73,15 +79,34 @@ class Player(pygame.sprite.Sprite):
             self.rect.y += self.gravity
         # if self.rect.top < 0:
         #     self.rect.y -= self.gravity
-        
+
+    def animation(self):
+        self.counter += 1
+        wing_cooldown = 5
+        if game_over == False:
+            if self.counter > wing_cooldown:
+                self.counter = 0
+                self.index += 1
+                if self.index >= len(self.images):
+                    self.index = 0
+            self.image = self.images[self.index]
+
+            # rotation 
+            self.image = pygame.transform.rotate(self.images[self.index], self.gravity * - 4)
+        else: 
+            bird.image = pygame.image.load('flappy bird/Assets/Bird/death.png').convert_alpha()
+
     def draw(self):
         screen.blit(self.image, self.rect)
         self.rect.x += 0.9
 
     def update(self):
         self.move()
+        self.animation()
         if flying == True:
             self.player_gravity()
+
+    
 
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self, x, y,position):
@@ -145,6 +170,7 @@ while run:
         # collision with obstacle and top/bottom
         if pygame.sprite.groupcollide(bird_group, obstacle_group, False, False) or bird.rect.bottom > 500 or bird.rect.top < 0:
             flying = False
+            game_over = True
 
 
     for event in pygame.event.get():
