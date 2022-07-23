@@ -43,9 +43,12 @@ def draw():
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
         self.image = bird_image
         self.rect = self.image.get_rect(topleft = (0, SCREEN_HEIGHT // 2))
         self.rect.center = (x, y)
+        self.width = 32
+        self.height = 32
         self.gravity = 0
         self.pressed = False
         
@@ -64,24 +67,16 @@ class Player(pygame.sprite.Sprite):
         self.gravity += 0.4
         if self.gravity > 8:
             self.gravity = 8
-        if self.gravity < -15:
+        if self.gravity < -8:
             self.gravity = -8
         if self.rect.bottom < 500:
             self.rect.y += self.gravity
         # if self.rect.top < 0:
         #     self.rect.y -= self.gravity
-
         
-
-        print(self.gravity)
-
-
     def draw(self):
         screen.blit(self.image, self.rect)
         self.rect.x += 0.9
-
-    
-
 
     def update(self):
         self.move()
@@ -107,11 +102,10 @@ class Obstacle(pygame.sprite.Sprite):
 
 
 
-bird = Player(50,SCREEN_HEIGHT // 2)
 obstacle_group = pygame.sprite.Group()
 bird_group = pygame.sprite.Group()
-
-
+bird = Player(50,SCREEN_HEIGHT // 2)
+bird_group.add(bird)
 
 
 run = True
@@ -124,6 +118,8 @@ while run:
     # sprites
     bird.draw()
     bird.update()
+
+
     if flying == True and game_over == False:
         obstacle_group.draw(screen)
         obstacle_group.update()
@@ -146,13 +142,10 @@ while run:
             obstacle_group.add(top_ob)
             last_ob = time
 
+        # collision with obstacle and top/bottom
+        if pygame.sprite.groupcollide(bird_group, obstacle_group, False, False) or bird.rect.bottom > 500 or bird.rect.top < 0:
+            flying = False
 
-    # check if bird hits the ground or ceiling
-    if bird.rect.bottom > 500 or bird.rect.top < 0:
-        game_over = True
-        flying = False
-
-    # Need to make collision
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
