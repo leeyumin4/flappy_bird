@@ -21,15 +21,18 @@ ob_frequency = 1500 # ms
 last_ob = pygame.time.get_ticks() - ob_frequency
 flying = False
 game_over = False
+score = 0
 
 # Images
 bg_image = pygame.image.load('flappy bird/Assets/Background/background.png').convert_alpha()
 bg_image = pygame.transform.scale(bg_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
 mountain_image = pygame.image.load('flappy bird/Assets/Background/mountain.png').convert_alpha()
 mountain_image = pygame.transform.scale(mountain_image, (SCREEN_WIDTH, SCREEN_HEIGHT // 3))
+button_image = pygame.image.load('flappy bird/Assets/HUD/reset.png').convert_alpha()
 # bird_image = pygame.image.load(f'flappy bird/Assets/Bird/bird{num}.png').convert_alpha()
 obstacle_image = pygame.image.load('flappy bird/Assets/Background/obstacle.png').convert_alpha()
 obstacle_image = pygame.transform.scale(obstacle_image, (50, 300))
+
 
 bg1 = 0
 bg2 = SCREEN_WIDTH
@@ -39,6 +42,13 @@ def draw():
     screen.blit(bg_image, (bg2, 0))
     screen.blit(mountain_image, (bg1, 350))
     screen.blit(mountain_image, (bg2, 350))
+
+def reset():
+    obstacle_group.empty()
+    bird.rect.x = 50
+    bird.rect.y = SCREEN_HEIGHT // 2
+    score = 0
+    return score 
 
 
 class Player(pygame.sprite.Sprite):
@@ -106,7 +116,6 @@ class Player(pygame.sprite.Sprite):
         if flying == True:
             self.player_gravity()
 
-    
 
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self, x, y,position):
@@ -126,12 +135,33 @@ class Obstacle(pygame.sprite.Sprite):
             self.kill()
 
 
+class Button():
+    def __init__(self, x, y, image):
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+
+    def draw(self):
+        
+        action = False
+
+        # check for mouse over
+        pos = pygame.mouse.get_pos()
+        if self.rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[0] == 1:
+                action = True
+
+
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+
+        return action
+
 
 obstacle_group = pygame.sprite.Group()
 bird_group = pygame.sprite.Group()
 bird = Player(50,SCREEN_HEIGHT // 2)
 bird_group.add(bird)
-
+button = Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, button_image)
 
 run = True
 while run:
@@ -171,6 +201,13 @@ while run:
         if pygame.sprite.groupcollide(bird_group, obstacle_group, False, False) or bird.rect.bottom > 500 or bird.rect.top < 0:
             flying = False
             game_over = True
+    
+    if game_over == True:
+        if button.draw() == True:
+            game_over = False
+            score = reset()
+        
+            
 
 
     for event in pygame.event.get():
