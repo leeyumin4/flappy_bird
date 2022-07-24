@@ -22,6 +22,10 @@ last_ob = pygame.time.get_ticks() - ob_frequency
 flying = False
 game_over = False
 score = 0
+pass_obs = False
+
+# font
+font = pygame.font.Font('flappy bird/Assets/Font/junegull.ttf', 50)
 
 # Images
 bg_image = pygame.image.load('flappy bird/Assets/Background/background.png').convert_alpha()
@@ -50,6 +54,9 @@ def reset():
     score = 0
     return score 
 
+def draw_score(text, font, color, x, y):
+    image = font.render(text, True, color)
+    screen.blit(image, (x, y))
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -202,6 +209,19 @@ while run:
             flying = False
             game_over = True
     
+    # check for score
+    if len(obstacle_group) > 0:
+        if bird_group.sprites()[0].rect.left > obstacle_group.sprites()[0].rect.left\
+            and bird_group.sprites()[0].rect.right < obstacle_group.sprites()[0].rect.right\
+            and pass_obs == False:
+            pass_obs = True
+        if pass_obs == True:
+            if bird_group.sprites()[0].rect.left > obstacle_group.sprites()[0].rect.right:
+                score += 1
+                pass_obs = False
+    
+    draw_score(str(score), font, 'Grey', SCREEN_WIDTH // 2, 20)
+
     if game_over == True:
         if button.draw() == True:
             game_over = False
